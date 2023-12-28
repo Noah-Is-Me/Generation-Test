@@ -31,7 +31,7 @@ namespace Generation_Test
             double increment = 0.0000001; // 0.0002000
             int totalIncrements = 1500;   // 0.0000005
             int individualLength = 25000; // average for humans is 3200000000
-            int populationSize = 33; // Or 100?
+            int populationSize = 100; // Or 100?
             int roundingDigits = 6;
 
             double graphInterval = (mutationRate + increment*totalIncrements)/10;
