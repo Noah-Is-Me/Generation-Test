@@ -27,12 +27,15 @@ namespace Generation_Test
 
             int targetFitness = 100;
             double mutationRate = 0.0000001;
-            int attempts = 30;
-            double increment = 0.0000001; // 0.0002000
-            int totalIncrements = 1500;   // 0.0000005
+            int attempts = 5;
+            double increment = 0.0000005; // 0.0002000
+            int totalIncrements = 660;   // 0.0000005
             int individualLength = 25000; // average for humans is 3200000000
             int populationSize = 100; // Or 100?
             int roundingDigits = 6;
+            bool countPercentPositive = false;
+
+            bool doSomaticMutation = false;
 
             double graphInterval = (mutationRate + increment*totalIncrements)/10;
 
@@ -53,6 +56,9 @@ namespace Generation_Test
             double germlineMutationRate;
             double somaticMutationRate;
 
+            int beneficialMutationCount;
+            bool countedBeneficialMutation;
+
             for (int z = 0; z < totalIncrements; z++)
             {
                 averageGenerations.Add(mutationRate, 0);
@@ -67,6 +73,8 @@ namespace Generation_Test
                 for (int n = 0; n < attempts; n++)
                 {
                     generationCount = 0;
+                    beneficialMutationCount = 0;
+                    countedBeneficialMutation = false;
 
                     fittestIndividual = new double[3];
 
@@ -78,6 +86,7 @@ namespace Generation_Test
 
                     while (fittestIndividual[2] < targetFitness)
                     {
+                        countedBeneficialMutation = false;
                         generationCount++;
 
                         highestFitness = double.NegativeInfinity;
@@ -93,20 +102,39 @@ namespace Generation_Test
                             // GERMLINE Fitness Mutate:
                             int rollSuccesses = probabilityOfGermlineSuccess.Sample();
                             double fitnessIncrease = normalDistribution(germlineMutationMean * rollSuccesses, mutationStdDev * Math.Sqrt(rollSuccesses));
+
+                            if (!countedBeneficialMutation && fitnessIncrease > 0)
+                            {
+                                countedBeneficialMutation = true;
+                                beneficialMutationCount++;
+                            }
+
                             currentIndividual[2] += fitnessIncrease;
 
-                            // SOMATIC Fitness Mutate:
-                            double[] currentSomaticIndividual = new double[3];
-                            currentIndividual.CopyTo(currentSomaticIndividual, 0);
-
-                            rollSuccesses = probabilityOfSomaticSuccess.Sample();
-                            fitnessIncrease = normalDistribution(somaticMutationMean * rollSuccesses, mutationStdDev * Math.Sqrt(rollSuccesses));
-                            currentSomaticIndividual[2] += fitnessIncrease;
-
-                            if (currentSomaticIndividual[2] > highestFitness)
+                            if (doSomaticMutation)
                             {
-                                highestFitness = currentSomaticIndividual[2];
-                                tempFittestIndividual = currentIndividual;
+
+                                // SOMATIC Fitness Mutate:
+                                double[] currentSomaticIndividual = new double[3];
+                                currentIndividual.CopyTo(currentSomaticIndividual, 0);
+
+                                rollSuccesses = probabilityOfSomaticSuccess.Sample();
+                                fitnessIncrease = normalDistribution(somaticMutationMean * rollSuccesses, mutationStdDev * Math.Sqrt(rollSuccesses));
+                                currentSomaticIndividual[2] += fitnessIncrease;
+
+                                if (currentSomaticIndividual[2] > highestFitness)
+                                {
+                                    highestFitness = currentSomaticIndividual[2];
+                                    tempFittestIndividual = currentIndividual;
+                                }
+                            }
+                            else
+                            {
+                                if (currentIndividual[2] > highestFitness)
+                                {
+                                    highestFitness = currentIndividual[2];
+                                    tempFittestIndividual = currentIndividual;
+                                }
                             }
 
 
@@ -118,7 +146,13 @@ namespace Generation_Test
                         }
 
                     }
-                    averageGenerations[mutationRate] += generationCount;
+
+                    if (countPercentPositive)
+                    {
+                        averageGenerations[mutationRate] += (double)beneficialMutationCount / (double)generationCount;
+                    }
+                    else
+                        averageGenerations[mutationRate] += generationCount;
                 }
 
                 Debug.WriteLine("");
@@ -126,6 +160,7 @@ namespace Generation_Test
                 Debug.WriteLine(stopwatch.ElapsedMilliseconds + "ms");
 
                 averageGenerations[mutationRate] /= attempts;
+                //Debug.WriteLine(averageGenerations[mutationRate]);
 
                 mutationRate += increment;
             }
@@ -159,7 +194,11 @@ namespace Generation_Test
                 chart.BackColor = Color.White;
                 CA.BackColor = Color.White;
 
-                CA.AxisY.Title = "Average Generations";
+                if (countPercentPositive)
+                    CA.AxisY.Title = "Percentage Positive Mutations";
+                else
+                    CA.AxisY.Title = "Average Generations";
+
                 CA.AxisX.Title = "Mutation Rates (mutations per gene)";
 
                 CA.AxisX.TitleAlignment = StringAlignment.Center;
@@ -171,7 +210,11 @@ namespace Generation_Test
                 CA.AxisX.Minimum = 0;
                 CA.AxisX.Interval = graphInterval;
 
-                chart.Titles.Add($"Average Generations to Mutation Rate (Target Fitness = {targetFitness})");
+                if (countPercentPositive)
+                    chart.Titles.Add($"Percentage Positve Mutations to Mutation Rate");
+                else
+                    chart.Titles.Add($"Average Generations to Mutation Rate (Target Fitness = {targetFitness})");
+
                 chart.Titles.ElementAt(0).Font = new Font("Ariel", 15, FontStyle.Bold);
                 chart.Size = new Size(1920, 1080);
                 chart.Series["Average Generations"].BorderWidth = 4;
@@ -182,7 +225,7 @@ namespace Generation_Test
 
                 foreach (KeyValuePair<double, double> dataPoint in data)
                 {
-                    chart.Series["Average Generations"].Points.AddXY(Math.Round(dataPoint.Key, roundingDigits), dataPoint.Value*100);
+                    chart.Series["Average Generations"].Points.AddXY(Math.Round(dataPoint.Key, roundingDigits), dataPoint.Value);
                 }
 
                 string graphInfo = $"Generation Test {DateTime.Now.ToString("MMM-dd-yyyy hh-mm-ss-fff tt")}";
