@@ -33,7 +33,7 @@ namespace Generation_Test
             int individualLength = 25000; // average for humans is 3200000000
             int populationSize = 100; // Or 100?
             int roundingDigits = 6;
-            bool countPercentPositive = false;
+            bool countPercentPositive = true;
 
             bool doSomaticMutation = false;
 
@@ -74,7 +74,6 @@ namespace Generation_Test
                 {
                     generationCount = 0;
                     beneficialMutationCount = 0;
-                    countedBeneficialMutation = false;
 
                     fittestIndividual = new double[3];
 
@@ -211,14 +210,20 @@ namespace Generation_Test
                 CA.AxisX.Interval = graphInterval;
 
                 if (countPercentPositive)
+                {
+                    chart.Series["Average Generations"].Color = Color.Red;
                     chart.Titles.Add($"Percentage Positve Mutations to Mutation Rate");
+                }
                 else
+                {
+                    chart.Series["Average Generations"].Color = Color.Blue;
                     chart.Titles.Add($"Average Generations to Mutation Rate (Target Fitness = {targetFitness})");
+                }
 
                 chart.Titles.ElementAt(0).Font = new Font("Ariel", 15, FontStyle.Bold);
                 chart.Size = new Size(1920, 1080);
                 chart.Series["Average Generations"].BorderWidth = 4;
-                chart.Series["Average Generations"].Color = Color.Blue;
+                
 
                 chart.AntiAliasing = AntiAliasingStyles.Graphics;
                 chart.TextAntiAliasingQuality = TextAntiAliasingQuality.High;
