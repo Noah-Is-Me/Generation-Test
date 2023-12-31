@@ -30,8 +30,8 @@ namespace Generation_Test
             int attempts = 5;
             double increment = 0.000001; // 0.0002000
             int totalIncrements = 330;   // 0.0000005
-            int individualLength = 10000; // average for humans is 3200000000
-            int populationSize = 100; // Or 100?
+            int individualLength = 25000; // average for humans is 3200000000
+            int populationSize = 25; // Or 100?
             int roundingDigits = 6;
             bool countPercentPositive = true;
 
@@ -44,8 +44,8 @@ namespace Generation_Test
 
             double mutationStdDev = 1;
 
-            double germlineMutationMean = -mutationStdDev / 1; // -mutationStdDev / 1
-            double somaticMutationMean = -mutationStdDev / 1; // -mutationStdDev / 1
+            double germlineMutationMean = -mutationStdDev / 1.5; // -mutationStdDev / 1
+            double somaticMutationMean = -mutationStdDev / 1.5; // -mutationStdDev / 1
 
             double probabilityOfPositiveGermlineMutation = (1 - Normal.CDF(germlineMutationMean, mutationStdDev, 0));
             Debug.WriteLine("Probability of positive mutation: " + probabilityOfPositiveGermlineMutation);
@@ -242,7 +242,7 @@ namespace Generation_Test
                 CA.AxisX.Minimum = 0;
                 CA.AxisX.Interval = graphInterval;
 
-                //CA.AxisY.Maximum = 1.2;
+                CA.AxisY.Maximum = 1.2;
 
                 if (countPercentPositive)
                 {
@@ -287,10 +287,10 @@ namespace Generation_Test
             double expectedEquation(double m)
             {
                 double pRootc = populationSize*Math.Sqrt(probabilityOfPositiveGermlineMutation);
-                //double divisor = Math.E;
+                double divisor = Math.E + probabilityOfPositiveGermlineMutation;
 
-                double y = Math.Pow(probabilityOfPositiveGermlineMutation, individualLength * m / Math.E);
-                y *= individualLength * m / Math.E;
+                double y = Math.Pow(probabilityOfPositiveGermlineMutation, individualLength * m / divisor);
+                y *= individualLength * m / divisor;
                 y = 1 - y;
                 y = Math.Pow(y, pRootc);
                 y = 1 - y;
