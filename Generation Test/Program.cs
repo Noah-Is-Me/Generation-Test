@@ -31,7 +31,7 @@ namespace Generation_Test
             double increment = 0.000001; // 0.0002000
             int totalIncrements = 330;   // 0.0000005
             int individualLength = 25000; // average for humans is 3200000000
-            int populationSize = 25; // Or 100?
+            int populationSize = 1; // Or 100?
             int roundingDigits = 6;
             bool countPercentPositive = true;
 
@@ -287,13 +287,13 @@ namespace Generation_Test
             double expectedEquation(double m)
             {
                 double pRootc = populationSize*Math.Sqrt(probabilityOfPositiveGermlineMutation);
-                double divisor = Math.E + probabilityOfPositiveGermlineMutation;
+                double divisor = Math.E + (Math.Pow(probabilityOfPositiveGermlineMutation, 2) * Math.Pow(populationSize, 1d / Math.E));
 
                 double y = Math.Pow(probabilityOfPositiveGermlineMutation, individualLength * m / divisor);
                 y *= individualLength * m / divisor;
-                y = 1 - y;
+                y = 1d - y;
                 y = Math.Pow(y, pRootc);
-                y = 1 - y;
+                y = 1d - y;
 
                 return y;
 
