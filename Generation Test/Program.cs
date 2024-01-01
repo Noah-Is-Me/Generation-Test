@@ -28,14 +28,14 @@ namespace Generation_Test
             int targetFitness = 100;
             double mutationRate = 0.0000001; //0.0000001
             int attempts = 5;
-            double increment = 0.000001; // 0.0002000
-            int totalIncrements = 660;   // 0.0000005
+            double increment = 0.00001; // 0.0002000
+            int totalIncrements = 66;   // 0.0000005
             int individualLength = 25000; // average for humans is 3200000000
             int populationSize = 100; // Or 100?
             int roundingDigits = 6;
             bool countPercentPositive = true;
 
-            bool absoluteLethal = true;
+            bool absoluteLethal = false;
             bool showExpectedPercent = true;
 
             bool doSomaticMutation = false;
@@ -45,7 +45,7 @@ namespace Generation_Test
             double mutationStdDev = 1;
 
             double germlineMutationMean = -mutationStdDev / 1.5; // -mutationStdDev / 1
-            double somaticMutationMean = -mutationStdDev / 1.5; // -mutationStdDev / 1
+            double somaticMutationMean = -mutationStdDev / 1; // -mutationStdDev / 1
 
             double probabilityOfPositiveGermlineMutation = (1 - Normal.CDF(germlineMutationMean, mutationStdDev, 0));
             Debug.WriteLine("Probability of positive mutation: " + probabilityOfPositiveGermlineMutation);
@@ -86,8 +86,8 @@ namespace Generation_Test
 
                     fittestIndividual[2] = 0;
 
-                    while (fittestIndividual[2] < targetFitness)
-                    //for (int j=0; j<100; j++)
+                    //while (fittestIndividual[2] < targetFitness)
+                    for (int j=0; j<100; j++)
                     {
                         countedBeneficialMutation = false;
                         generationCount++;
@@ -106,6 +106,16 @@ namespace Generation_Test
 
                             // GERMLINE Fitness Mutate:
                             int rollSuccesses = probabilityOfGermlineSuccess.Sample();
+                            
+                            double probOfOneNegative = 1d - Math.Pow(probabilityOfPositiveGermlineMutation, rollSuccesses);
+                            double probOfOnePositive = 1d - Math.Pow(1d-probabilityOfPositiveGermlineMutation, rollSuccesses);
+
+                            
+                            if (absoluteLethal && random.NextDouble() < probOfOneNegative)
+                            {
+                                continue;
+                            }
+                            
 
                             Normal normal = new Normal(germlineMutationMean * rollSuccesses, mutationStdDev * Math.Sqrt(rollSuccesses));
                             double fitnessIncrease = normal.Sample();
@@ -116,11 +126,7 @@ namespace Generation_Test
                             double oldFitness = currentIndividual[2];
 
                             
-                            if (fitnessIncrease < 0)
-                            {
-                                if (absoluteLethal) continue;
-                            }
-                            else if (!countedBeneficialMutation && fitnessIncrease > 0)
+                            if (!countedBeneficialMutation && /*fitnessIncrease >= 0*/ /*random.NextDouble() < probOfOnePositive*/ random.NextDouble() > probOfOneNegative)
                             {
                                 //Debug.WriteLine(fitnessIncrease);
                                 countedBeneficialMutation = true;
@@ -286,14 +292,42 @@ namespace Generation_Test
 
             double expectedEquation(double m)
             {
-                double pRootc = populationSize*Math.Sqrt(probabilityOfPositiveGermlineMutation);
-                double divisor = Math.E + (Math.Pow(probabilityOfPositiveGermlineMutation, 2) * Math.Pow(populationSize, 1d / Math.E));
+                /*
+                double pRootc = Math.Sqrt(probabilityOfPositiveGermlineMutation * populationSize);
+                double divisor = 1; // Math.E + (Math.Pow(probabilityOfPositiveGermlineMutation, 2) * Math.Pow(populationSize, 1d / Math.E));
 
                 double y = Math.Pow(probabilityOfPositiveGermlineMutation, individualLength * m / divisor);
                 y *= individualLength * m / divisor;
                 y = 1d - y;
                 y = Math.Pow(y, pRootc);
                 y = 1d - y;
+                */
+
+                /* THIS WORKS FOR PART 1:
+                double y = 1d - probabilityOfPositiveGermlineMutation;
+                y = Math.Pow(y, individualLength * m);
+                //y = 1d - y; // Remove?
+                //y *= Math.Pow(Math.Sqrt(probabilityOfPositiveGermlineMutation), m * individualLength);
+                //y *= probabilityOfPositiveGermlineMutation;
+                //y = 1d - y;
+                y = Math.Pow(y, populationSize);
+                y = 1d - y;
+                */
+
+                double y = Math.Pow(probabilityOfPositiveGermlineMutation, individualLength * m);
+                y = 1 - y;
+                y = Math.Pow(y, populationSize);
+                y = 1 - y;
+                
+
+                /*
+                double y = Math.Pow(Math.Sqrt(probabilityOfPositiveGermlineMutation), m * individualLength);
+                //y *= probabilityOfPositiveGermlineMutation;
+                y = 1 - y;
+                y = Math.Pow(y, populationSize);
+                y = 1 - y;
+                */
+
 
                 return y;
 
