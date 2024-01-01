@@ -29,9 +29,9 @@ namespace Generation_Test
             double mutationRate = 0.0000001; //0.0000001
             int attempts = 5;
             double increment = 0.000001; // 0.0002000
-            int totalIncrements = 330;   // 0.0000005
+            int totalIncrements = 660;   // 0.0000005
             int individualLength = 25000; // average for humans is 3200000000
-            int populationSize = 1; // Or 100?
+            int populationSize = 100; // Or 100?
             int roundingDigits = 6;
             bool countPercentPositive = true;
 
