@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
@@ -37,6 +38,7 @@ namespace Generation_Test
 
             bool absoluteLethal = true;
             bool showExpectedPercent = true;
+            bool getRawData = true;
 
             bool doSomaticMutation = false;
 
@@ -44,8 +46,8 @@ namespace Generation_Test
 
             double mutationStdDev = 1;
 
-            double germlineMutationMean = -mutationStdDev / 1; // -mutationStdDev / 1
-            double somaticMutationMean = -mutationStdDev / 1; // -mutationStdDev / 1
+            double germlineMutationMean = -mutationStdDev / 2; // -mutationStdDev / 1
+            double somaticMutationMean = -mutationStdDev / 2; // -mutationStdDev / 1
 
             double probabilityOfPositiveGermlineMutation = (1 - Normal.CDF(germlineMutationMean, mutationStdDev, 0));
             Debug.WriteLine("Probability of positive mutation: " + probabilityOfPositiveGermlineMutation);
@@ -115,10 +117,10 @@ namespace Generation_Test
 
                             if (absoluteLethal && random.NextDouble() < probOfOneNegative)
                             {
-                                //continue;
+                                continue;
                             } 
                             
-                            if (!countedBeneficialMutation && random.NextDouble() < probOfOnePositive)
+                            if (!countedBeneficialMutation && fitnessIncrease > 0)
                             {
                                 //Debug.WriteLine(fitnessIncrease);
                                 countedBeneficialMutation = true;
@@ -264,13 +266,23 @@ namespace Generation_Test
                 chart.AntiAliasing = AntiAliasingStyles.Graphics;
                 chart.TextAntiAliasingQuality = TextAntiAliasingQuality.High;
 
+                string csv = "";
+                csv += $"{CA.AxisX.Title},{CA.AxisY.Title}";
+
                 foreach (KeyValuePair<double, double> dataPoint in data)
                 {
-                    generations.Points.AddXY(Math.Round(dataPoint.Key, roundingDigits), dataPoint.Value);
+                    double x = Math.Round(dataPoint.Key, roundingDigits);
+
+                    generations.Points.AddXY(x, dataPoint.Value);
 
                     if (showExpectedPercent)
                     {
-                        expected.Points.AddXY(Math.Round(dataPoint.Key, roundingDigits), expectedEquation(dataPoint.Key));
+                        expected.Points.AddXY(x, expectedEquation(dataPoint.Key));
+                    }
+
+                    if (getRawData)
+                    {
+                        csv += $"\n{x},{dataPoint.Value}";
                     }
                 }
 
@@ -279,6 +291,16 @@ namespace Generation_Test
                 string projectDirectory = Directory.GetParent(Directory.GetParent(Directory.GetParent(baseDirectory).FullName).FullName).FullName;
                 string graphsFolderPath = Path.Combine(projectDirectory, "Graphs");
                 string imagePath = Path.Combine(graphsFolderPath, graphInfo + ".png");
+
+                string csvPath = Path.Combine(graphsFolderPath, graphInfo + ".txt");
+
+
+                if (getRawData)
+                {
+                    //Debug.WriteLine(csv);
+
+                    File.WriteAllText(csvPath, csv);
+                }
 
                 Debug.WriteLine("Image Path: " + imagePath);
 
@@ -298,6 +320,7 @@ namespace Generation_Test
                 y = 1d - y;
                 */
 
+                /*
                 double t = 1d;
 
                 // PART 1!!!
@@ -317,6 +340,25 @@ namespace Generation_Test
 
                 // COMBINE THEM!!!
                 double y = y1 * y2;
+
+                */
+
+                // NEW MIGHT WORK
+
+                double c = Math.Pow(probabilityOfPositiveGermlineMutation, 2);
+
+                double y1 = 1d - m;
+                y1 += c * m;
+                y1 = Math.Pow(y1, individualLength);
+
+                double y2 = 1d - (c * m);
+                y2 = Math.Pow(y2, individualLength);
+                y2 = 1d - y2;
+
+                double y = y1 * y2;
+                y = 1d - y;
+                y = Math.Pow(y, populationSize);
+                y = 1d - y;
 
 
                 return y;
