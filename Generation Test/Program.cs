@@ -46,8 +46,8 @@ namespace Generation_Test
 
             double mutationStdDev = 1;
 
-            double germlineMutationMean = -mutationStdDev / 2; // -mutationStdDev / 1
-            double somaticMutationMean = -mutationStdDev / 2; // -mutationStdDev / 1
+            double germlineMutationMean = -mutationStdDev / 1; // -mutationStdDev / 1
+            double somaticMutationMean = -mutationStdDev / 1; // -mutationStdDev / 1
 
             double probabilityOfPositiveGermlineMutation = (1 - Normal.CDF(germlineMutationMean, mutationStdDev, 0));
             Debug.WriteLine("Probability of positive mutation: " + probabilityOfPositiveGermlineMutation);
