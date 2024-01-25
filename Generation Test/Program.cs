@@ -32,12 +32,12 @@ namespace Generation_Test
             double increment = 0.000001; // 0.0002000
             int totalIncrements = 660;   // 0.0000005
             int individualLength = 25000; // average for humans is 3200000000
-            int populationSize = 100; // Or 100?
+            int populationSize = 1; // Or 100?
             int roundingDigits = 6;
             bool countPercentPositive = true;
 
-            bool absoluteLethal = true;
-            bool showExpectedPercent = true;
+            bool absoluteLethal = false;
+            bool showExpectedPercent = false;
             bool getRawData = true;
 
             bool doSomaticMutation = false;
@@ -108,23 +108,48 @@ namespace Generation_Test
 
                             // GERMLINE Fitness Mutate:
                             int rollSuccesses = probabilityOfGermlineSuccess.Sample();
+                            //double rollSuccesses = mutationRate * individualLength;
                             
-                            double probOfOneNegative = 1d - Math.Pow(probabilityOfPositiveGermlineMutation, rollSuccesses);
-                            double probOfOnePositive = 1d - Math.Pow(1d-probabilityOfPositiveGermlineMutation, rollSuccesses);
+                            //double probOfOneNegative = 1d - Math.Pow(probabilityOfPositiveGermlineMutation, rollSuccesses);
+                            //double probOfOnePositive = 1d - Math.Pow(1d-probabilityOfPositiveGermlineMutation, rollSuccesses);
 
                             Normal normal = new Normal(germlineMutationMean * rollSuccesses, mutationStdDev * Math.Sqrt(rollSuccesses));
-                            double fitnessIncrease = normal.Sample();
+                            //double fitnessIncrease = normal.Sample();
+                            double fitnessIncrease = 1-(normal.CumulativeDistribution(0));
 
+
+                            // SOMETHING IS WRONG WITH LINE 110 THE POISSON DISTRIBUTION
+                            // It should match m*g but it does not when comparing cdf of normal distribution
+
+
+                            fitnessIncrease = rollSuccesses;
+
+                            /*
                             if (absoluteLethal && random.NextDouble() < probOfOneNegative)
                             {
                                 continue;
                             } 
                             
-                            if (!countedBeneficialMutation && fitnessIncrease > 0)
+                            if (!countedBeneficialMutation && fitnessIncrease >= 0)
                             {
                                 //Debug.WriteLine(fitnessIncrease);
                                 countedBeneficialMutation = true;
                                 beneficialMutationCount++;
+                            }
+                            */
+
+                            /*
+                            if (!countedBeneficialMutation && random.NextDouble() < (1 - normal.CumulativeDistribution(0)))
+                            {
+                                countedBeneficialMutation = true;
+                                beneficialMutationCount++;
+                            }
+                            */
+
+                            if (!countedBeneficialMutation)
+                            {
+                                countedBeneficialMutation = true;
+                                beneficialMutationCount+= fitnessIncrease;
                             }
 
                             //Debug.WriteLine("Mutations: " + rollSuccesses);
@@ -194,6 +219,7 @@ namespace Generation_Test
                
 
                 averageGenerations[mutationRate] /= attempts;
+
                 //Debug.WriteLine(averageGenerations[mutationRate]);
 
                 mutationRate += increment;
@@ -245,7 +271,7 @@ namespace Generation_Test
                 CA.AxisX.Minimum = 0;
                 CA.AxisX.Interval = graphInterval;
 
-                CA.AxisY.Maximum = 1.2;
+                //CA.AxisY.Maximum = 1.2;
 
                 if (countPercentPositive)
                 {
