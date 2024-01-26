@@ -75,6 +75,8 @@ namespace Generation_Test
                 Poisson probabilityOfGermlineSuccess = new Poisson(germlineMutationRate * individualLength);
                 Poisson probabilityOfSomaticSuccess = new Poisson(somaticMutationRate * individualLength);
 
+                //Binomial probabilityOfGermlineSuccess = new Binomial(germlineMutationRate, individualLength);
+
                 for (int n = 0; n < attempts; n++)
                 {
                     generationCount = 0;
@@ -107,7 +109,14 @@ namespace Generation_Test
                             fittestIndividual.CopyTo(currentIndividual, 0);
 
                             // GERMLINE Fitness Mutate:
-                            int rollSuccesses = probabilityOfGermlineSuccess.Sample();
+                            //double rollSuccesses = probabilityOfGermlineSuccess.Sample();
+                            double rollSuccesses = germlineMutationRate * individualLength;
+
+
+                            if (rollSuccesses == 0)
+                            {
+                                rollSuccesses = 0.000001;
+                            }
                             //double rollSuccesses = mutationRate * individualLength;
                             
                             //double probOfOneNegative = 1d - Math.Pow(probabilityOfPositiveGermlineMutation, rollSuccesses);
@@ -117,12 +126,12 @@ namespace Generation_Test
                             //double fitnessIncrease = normal.Sample();
                             double fitnessIncrease = 1-(normal.CumulativeDistribution(0));
 
+                            //fitnessIncrease = normal.Mean;
+
 
                             // SOMETHING IS WRONG WITH LINE 110 THE POISSON DISTRIBUTION
                             // It should match m*g but it does not when comparing cdf of normal distribution
 
-
-                            fitnessIncrease = rollSuccesses;
 
                             /*
                             if (absoluteLethal && random.NextDouble() < probOfOneNegative)
@@ -316,6 +325,7 @@ namespace Generation_Test
                 string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
                 string projectDirectory = Directory.GetParent(Directory.GetParent(Directory.GetParent(baseDirectory).FullName).FullName).FullName;
                 string graphsFolderPath = Path.Combine(projectDirectory, "Graphs");
+                graphsFolderPath = Path.Combine(graphsFolderPath, "RawDataGraphs");
                 string imagePath = Path.Combine(graphsFolderPath, graphInfo + ".png");
 
                 string csvPath = Path.Combine(graphsFolderPath, graphInfo + ".txt");
