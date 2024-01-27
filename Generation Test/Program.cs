@@ -28,7 +28,7 @@ namespace Generation_Test
 
             int targetFitness = 100;
             double mutationRate = 0.0000001; //0.0000001
-            int attempts = 5;
+            int attempts = 20;
             double increment = 0.000001; // 0.0002000
             int totalIncrements = 660;   // 0.0000005
             int individualLength = 25000; // average for humans is 3200000000
@@ -37,7 +37,7 @@ namespace Generation_Test
             bool countPercentPositive = true;
 
             bool absoluteLethal = false;
-            bool showExpectedPercent = false;
+            bool showExpectedPercent = true;
             bool getRawData = true;
 
             bool doSomaticMutation = false;
@@ -53,6 +53,8 @@ namespace Generation_Test
             Debug.WriteLine("Probability of positive mutation: " + probabilityOfPositiveGermlineMutation);
 
             Dictionary<double, double> averageGenerations = new Dictionary<double, double>();
+            Dictionary<double, double> debugDict = new Dictionary<double, double>();
+            double debugNum;
 
 
             int generationCount;
@@ -67,6 +69,7 @@ namespace Generation_Test
             for (int z = 0; z < totalIncrements; z++)
             {
                 averageGenerations.Add(mutationRate, 0);
+                debugDict.Add(mutationRate, 0);
                 stopwatch.Restart();
 
                 germlineMutationRate = mutationRate;
@@ -81,6 +84,8 @@ namespace Generation_Test
                 {
                     generationCount = 0;
                     beneficialMutationCount = 0;
+
+                    debugNum = 0;
 
                     fittestIndividual = new double[3];
 
@@ -109,25 +114,52 @@ namespace Generation_Test
                             fittestIndividual.CopyTo(currentIndividual, 0);
 
                             // GERMLINE Fitness Mutate:
-                            //double rollSuccesses = probabilityOfGermlineSuccess.Sample();
-                            double rollSuccesses = germlineMutationRate * individualLength;
+                            double rollSuccesses = probabilityOfGermlineSuccess.Sample();
+                            double debugRollSuccesses = germlineMutationRate * individualLength;
+
+                            //debugRollSuccesses = Math.Floor(debugRollSuccesses);
+                            //debugRollSuccesses /= 1.5;
 
 
                             if (rollSuccesses == 0)
                             {
                                 rollSuccesses = 0.000001;
                             }
+
+                            if (debugRollSuccesses == 0)
+                            {
+                                debugRollSuccesses = 0.000001;
+                            }
                             //double rollSuccesses = mutationRate * individualLength;
-                            
+
                             //double probOfOneNegative = 1d - Math.Pow(probabilityOfPositiveGermlineMutation, rollSuccesses);
                             //double probOfOnePositive = 1d - Math.Pow(1d-probabilityOfPositiveGermlineMutation, rollSuccesses);
 
                             Normal normal = new Normal(germlineMutationMean * rollSuccesses, mutationStdDev * Math.Sqrt(rollSuccesses));
+                            Normal debugNormal = new Normal(germlineMutationMean * debugRollSuccesses, mutationStdDev * Math.Sqrt(debugRollSuccesses));
                             //double fitnessIncrease = normal.Sample();
                             double fitnessIncrease = 1-(normal.CumulativeDistribution(0));
+                            double debugFitnessIncrease = 1-(debugNormal.CumulativeDistribution(0));
 
-                            //fitnessIncrease = normal.Mean;
+                            fitnessIncrease = Math.Sqrt(rollSuccesses);
+                            debugFitnessIncrease = Math.Sqrt(debugRollSuccesses);
 
+                            if (fitnessIncrease > debugFitnessIncrease)
+                            {
+                                debugFitnessIncrease = 5;
+                            } else
+                            {
+                                debugFitnessIncrease = -5;
+                            }
+
+                            if (false && n==0 && j==50)
+                            {
+                                Debug.WriteLine("");
+                                Debug.WriteLine("rollSuccesses: " + rollSuccesses + "; sqrt rollsuccesses:" + Math.Sqrt(rollSuccesses));
+                                Debug.WriteLine("debugRollSuccesses: " + debugRollSuccesses + "; sqrt debugRollSuccesses:" + Math.Sqrt(debugRollSuccesses)); ;
+                                Debug.WriteLine("percent difference: " + (debugFitnessIncrease - fitnessIncrease)/fitnessIncrease);
+                            }
+                            
 
                             // SOMETHING IS WRONG WITH LINE 110 THE POISSON DISTRIBUTION
                             // It should match m*g but it does not when comparing cdf of normal distribution
@@ -155,10 +187,11 @@ namespace Generation_Test
                             }
                             */
 
-                            if (!countedBeneficialMutation)
+                            if (true || !countedBeneficialMutation)
                             {
                                 countedBeneficialMutation = true;
-                                beneficialMutationCount+= fitnessIncrease;
+                                beneficialMutationCount += fitnessIncrease;
+                                debugNum += debugFitnessIncrease;
                             }
 
                             //Debug.WriteLine("Mutations: " + rollSuccesses);
@@ -215,6 +248,7 @@ namespace Generation_Test
                     if (countPercentPositive)
                     {
                         averageGenerations[mutationRate] += (double)beneficialMutationCount / (double)generationCount;
+                        debugDict[mutationRate] += (double)debugNum / (double)generationCount;
                         //Debug.WriteLine(beneficialMutationCount + "; "+ generationCount);
                         //Debug.WriteLine((double)beneficialMutationCount / (double)generationCount);
                     }
@@ -228,6 +262,7 @@ namespace Generation_Test
                
 
                 averageGenerations[mutationRate] /= attempts;
+                debugDict[mutationRate] /= attempts;
 
                 //Debug.WriteLine(averageGenerations[mutationRate]);
 
@@ -312,7 +347,8 @@ namespace Generation_Test
 
                     if (showExpectedPercent)
                     {
-                        expected.Points.AddXY(x, expectedEquation(dataPoint.Key));
+                        //expected.Points.AddXY(x, expectedEquation(dataPoint.Key));
+                        expected.Points.AddXY(x, debugDict[dataPoint.Key]);
                     }
 
                     if (getRawData)
