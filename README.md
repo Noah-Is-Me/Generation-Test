@@ -1,0 +1,1 @@
+Simulates evolution at different mutation rates. Compiles the data into a graph, relating mutation rate to EITHER generations taken to reach target fitness OR probability of positive mutation session.
