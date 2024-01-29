@@ -30,14 +30,14 @@ namespace Generation_Test
             double mutationRate = 0.0000001; //0.0000001
             int attempts = 5;
             double increment = 0.000001; // 0.0002000
-            int totalIncrements = 350;   // 0.0000005
+            int totalIncrements = 330;   // 0.0000005
             int individualLength = 25000; // average for humans is 3200000000
             int populationSize = 100; // Or 100?
             int roundingDigits = 6;
             bool countPercentPositive = false;
 
             //bool absoluteLethal = false; // Does not work
-            bool showExpectedPercent = true;
+            bool showExpectedPercent = false;
             bool getRawData = true;
 
             bool doSomaticMutation = false;
